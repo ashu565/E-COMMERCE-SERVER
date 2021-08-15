@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcryptjs = require("bcryptjs");
+const validator = require("validator");
 
 const userSchema = mongoose.Schema(
   {
@@ -18,10 +19,8 @@ const userSchema = mongoose.Schema(
       unique: true,
       required: [true, "A User must have an email address"],
       validate: {
-        validator: function (e) {
-          return /^([a-zA-Z0-9\.]){1,64}\@([a-zA-Z0-9\.]){1,64}$/.test(e);
-        },
-        message: (props) => `${props.value} is not a valid email address`,
+        validator: validator.isEmail,
+        message: "{VALUE} is not a valid email",
       },
     },
     password: {
@@ -49,6 +48,12 @@ const userSchema = mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
+
+function validateEmail(email) {
+  const re =
+    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return re.test(String(email).toLowerCase());
+}
 
 userSchema.pre("save", async function (next) {
   // will run when user.save() or user.create({});
