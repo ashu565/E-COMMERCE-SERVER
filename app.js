@@ -4,6 +4,8 @@ const cors = require("cors");
 const helmet = require("helmet");
 const xss = require("xss");
 
+const authRoutes = require("./routes/authRoutes");
+
 const app = express();
 
 // parse request body
@@ -20,7 +22,7 @@ app.options("*", cors());
 app.use(helmet());
 
 // prevents cross-side-scrypt
-app.use(xss());
+// app.use(xss());
 app.get("/", function (req, res) {
   res.send("Hey E-Commerce Root Directory");
 });
@@ -28,6 +30,7 @@ app.get("/", function (req, res) {
 // hpp still remains
 
 // routes
+app.use("/api/v1/auth", authRoutes);
 // globalerrorHandler
 
 module.exports = app;
