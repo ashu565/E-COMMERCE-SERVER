@@ -7,7 +7,7 @@ const crypto = require("crypto");
 
 exports.signup = async (req, res, next) => {
   try {
-    const { first_name, last_name, email, contact, password, passwordConfirm } =
+    const { first_name, last_name, email, password, passwordConfirm } =
       req.body;
     if (password !== passwordConfirm) {
       return next(new AppError("Passwords do not match same", 400));
@@ -17,7 +17,6 @@ exports.signup = async (req, res, next) => {
       first_name,
       last_name,
       email,
-      contact,
       password,
       passwordConfirm,
     });
@@ -67,6 +66,7 @@ exports.protect = async (req, res, next) => {
       return next(new AppError("You are not logged in", 400));
     }
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+    console.log(decoded);
     // return decoded : {id} because User was encrypted using its id
     const user = await User.findById(decoded.id);
     if (!user) {
@@ -74,6 +74,7 @@ exports.protect = async (req, res, next) => {
     }
     user.password = undefined; // it just avoid showing password in response but not in database
     req.user = user;
+    next();
   } catch (err) {
     next(err);
   }
@@ -103,7 +104,7 @@ exports.forgotPassword = async (req, res, next) => {
       return next(new AppError("No Such Account with this email", 404));
     }
     const resetToken = await user.createResetToken();
-    const resetURL = ` http://localhost:4000/resetPassword/${resetToken}`;
+    const resetURL = `${process.env.CLIENT_URL}/${resetToken}`;
     const message = `Hey ${user.first_name} ,Forgotten your password ! Reset your password using ${resetURL} if already done please ignore this message`;
     try {
       await new Email(user, message).sendPasswordResetMessage();
