@@ -3,6 +3,8 @@ const morgan = require("morgan");
 const cors = require("cors");
 const helmet = require("helmet");
 const xss = require("xss");
+const globalErrorHandler = require("./utils/globalErrorHandler");
+const AppError = require("./utils/AppError");
 
 const authRoutes = require("./routes/authRoutes");
 
@@ -32,5 +34,10 @@ app.get("/", function (req, res) {
 // routes
 app.use("/api/v1/auth", authRoutes);
 // globalerrorHandler
+
+app.all("*", (req, res, next) => {
+  next(new AppError(`can't find ${req.originalUrl} on this server`), 404);
+});
+app.use(globalErrorHandler);
 
 module.exports = app;

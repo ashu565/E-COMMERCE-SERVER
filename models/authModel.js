@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const bcryptjs = require("bcryptjs");
 const validator = require("validator");
+const crypto = require("crypto");
 
 const userSchema = mongoose.Schema(
   {
@@ -36,11 +37,12 @@ const userSchema = mongoose.Schema(
     contact: {
       type: String,
       minlength: 6,
-      required: [true, "A User Must Enter his Contact Number"],
     },
     avatar: {
       type: String,
     },
+    passwordResetToken: String,
+    passwordResetTokenExpires: Date,
   },
   {
     // for virtual populate
@@ -64,6 +66,18 @@ userSchema.methods.comparePasswords = async function (
   user_password
 ) {
   return await bcryptjs.compare(typed_password, user_password);
+};
+
+userSchema.methods.createResetToken = async function () {
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  // saving this token but hashing it with sha256 algorithm
+
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  this.passwordResetTokenExpires = Date.now() + 10 * 60 * 1000; // making it valid for 10 minutes just
+  return resetToken;
 };
 
 const User = mongoose.model("User", userSchema);
