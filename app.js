@@ -7,6 +7,7 @@ const globalErrorHandler = require("./utils/globalErrorHandler");
 const AppError = require("./utils/AppError");
 
 const authRoutes = require("./routes/authRoutes");
+const productRoutes = require("./routes/productRoutes");
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.get("/", function (req, res) {
 
 // routes
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/product", productRoutes);
 // globalerrorHandler
 
 app.all("*", (req, res, next) => {

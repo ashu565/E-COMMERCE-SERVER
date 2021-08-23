@@ -4,6 +4,7 @@ const AppError = require("../utils/AppError");
 const { promisify } = require("util");
 const Email = require("../utils/email");
 const crypto = require("crypto");
+const cloudinary = require("../utils/cloudinary");
 
 exports.signup = async (req, res, next) => {
   try {
@@ -48,6 +49,8 @@ exports.login = async (req, res, next) => {
     if (!user || !(await user.comparePasswords(password, user.password))) {
       return next(new AppError("Email or Password is Incorrect", 401));
     }
+    user.password = undefined;
+    user.passwordConfirm = undefined;
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
     res.status(201).json({
       status: "success",
@@ -66,7 +69,6 @@ exports.protect = async (req, res, next) => {
       return next(new AppError("You are not logged in", 400));
     }
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-    console.log(decoded);
     // return decoded : {id} because User was encrypted using its id
     const user = await User.findById(decoded.id);
     if (!user) {
@@ -154,6 +156,32 @@ exports.resetPassword = async (req, res, next) => {
     await user.save();
     res.status(204).json({
       status: "success",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateProfilePhoto = async (req, res, next) => {
+  try {
+    const { user } = req; // will run after protect route
+    if (user.avatar_id) {
+      await cloudinary.uploader.destroy(user.avatar_id);
+    }
+    const result = await cloudinary.uploader.upload(req.file.path);
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      {
+        avatar_url: result.secure_url,
+        avatar_id: result.public_id,
+      },
+      {
+        new: true,
+        runValidators: false,
+      }
+    );
+    res.status(200).json({
+      user: updatedUser,
     });
   } catch (err) {
     next(err);

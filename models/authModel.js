@@ -38,7 +38,10 @@ const userSchema = mongoose.Schema(
       type: String,
       minlength: 6,
     },
-    avatar: {
+    avatar_url: {
+      type: String,
+    },
+    avatar_id: {
       type: String,
     },
     passwordResetToken: String,

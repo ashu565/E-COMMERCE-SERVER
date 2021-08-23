@@ -1,39 +1,28 @@
-const nodemailer = require("nodemailer");
-const AppError = require("../utils/AppError");
+const sgMail = require("@sendgrid/mail");
+
 class Email {
   constructor(user, message) {
     this.to = user.email;
     this.name = user.first_name;
-    this.from = "Louis World";
+    this.from = `${process.env.EMAIL_FROM}`;
     this.message = message;
-  }
-
-  newTransporter() {
-    return nodemailer.createTransport({
-      service: "Gmail",
-      auth: {
-        user: process.env.GMAIL_USERNAME,
-        pass: process.env.GMAIL_PASSWORD,
-      },
-    });
   }
 
   async send(subject) {
     // Preparing mail options
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
     const mailOptions = {
       from: this.from,
       to: this.to,
       subject: subject,
       text: this.message,
+      html: `<strong>${this.message}</strong>`,
     };
     // Creating transporter and sending mail using
-    await this.newTransporter().sendMail(mailOptions, (err, res) => {
-      if (err) {
-        console.log(err);
-      }
-      if (res) {
-      }
-    });
+    sgMail
+      .send(mailOptions)
+      .then(() => console.log("Email Sent"))
+      .catch((err) => console.log("Error in sending mail", err));
   }
   async sendPasswordResetMessage() {
     await this.send("Your Password Reset Token is valid for next 10 minutes");
